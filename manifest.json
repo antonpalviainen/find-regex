@@ -1,0 +1,16 @@
+{
+  "manifest_version": 3,
+  "name": "FindRegex",
+  "version": "1.0",
+  "description": "Find and highlight with regular expressions",
+  "action": {
+    "default_popup": "index.html"
+  },
+  "content_scripts": [
+    {
+      "js": ["src/content.ts"],
+      "matches": ["<all_urls>"]
+    }
+  ],
+  "permissions": ["activeTab", "storage"]
+}
