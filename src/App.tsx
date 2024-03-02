@@ -6,7 +6,7 @@ import {
   sendMessageToTab,
   removeStorageValue,
 } from './utils'
-import { useDebounce } from './useDebounce'
+import { useDebounce } from './utils'
 
 function QueryForm({ instanceId }: { instanceId: number }) {
   const [query, setQuery] = useState('')
