@@ -1,6 +1,12 @@
 import { useEffect, useState } from 'react'
 import './App.css'
-import { getStorageValue, setStorageValue, sendMessageToTab } from './utils'
+import {
+  getStorageValue,
+  setStorageValue,
+  sendMessageToTab,
+  removeStorageValue,
+} from './utils'
+import { useDebounce } from './useDebounce'
 
 function QueryForm({ instanceId }: { instanceId: number }) {
   const [query, setQuery] = useState('')
@@ -8,20 +14,24 @@ function QueryForm({ instanceId }: { instanceId: number }) {
   const [isChecked, setIsChecked] = useState(true)
   // const [matchCount, setMatchCount] = useState(0)
 
-  // useEffect(() => {
-  //   getStorageValue('query').then((value) => {
-  //     setQuery(value ?? '')
-  //   })
+  useEffect(() => {
+    getStorageValue(`query-${instanceId}`).then((value) => {
+      setQuery(value ?? '')
+    })
 
-  //   getStorageValue('color').then((value) => {
-  //     setColor(value ?? '#ffff00')
-  //   })
-  // }, [])
+    // getStorageValue('color').then((value) => {
+    //   setColor(value ?? '#ffff00')
+    // })
+  }, [])
 
-  async function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+  const debouncedSetStorageValue = useDebounce(() => {
+    setStorageValue(`query-${instanceId}`, query)
+  })
+
+  async function handleQueryChange(e: React.ChangeEvent<HTMLInputElement>) {
     const query = e.target.value
     setQuery(query)
-    await setStorageValue('query', query)
+    debouncedSetStorageValue()
   }
 
   async function handleQuerySubmit(e: React.MouseEvent<HTMLButtonElement>) {
@@ -35,21 +45,6 @@ function QueryForm({ instanceId }: { instanceId: number }) {
     })
   }
 
-  async function handleColorChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setColor(e.target.value)
-    await sendMessageToTab({
-      type: 'color',
-      instanceId,
-      backgroundColor: color,
-    })
-    await setStorageValue('color', color)
-  }
-
-  async function handleRemoveQuery(e: React.MouseEvent<HTMLButtonElement>) {
-    e.preventDefault()
-    // await sendMessageToTab({ type: 'remove', instanceId })
-  }
-
   async function handleQueryToggle(e: React.ChangeEvent<HTMLInputElement>) {
     console.log('App.tsx: handleQueryToggle', e.target.checked)
     await sendMessageToTab({
@@ -61,6 +56,22 @@ function QueryForm({ instanceId }: { instanceId: number }) {
     setIsChecked(!isChecked)
   }
 
+  async function handleColorChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setColor(e.target.value)
+    await sendMessageToTab({
+      type: 'color',
+      instanceId,
+      backgroundColor: color,
+    })
+    // debounce(() => setStorageValue('color', color), 1000)()
+  }
+
+  async function handleQueryRemove(e: React.MouseEvent<HTMLButtonElement>) {
+    e.preventDefault()
+    await removeStorageValue(`query-${instanceId}`)
+    // await sendMessageToTab({ type: 'remove', instanceId })
+  }
+
   return (
     <form>
       <input type="checkbox" checked={isChecked} onChange={handleQueryToggle} />
@@ -68,12 +79,12 @@ function QueryForm({ instanceId }: { instanceId: number }) {
         className="query-input"
         type="text"
         value={query}
-        onChange={handleChange}
+        onChange={handleQueryChange}
         autoComplete="off"
       />
       <input type="color" value={color} onChange={handleColorChange} />
       <button onClick={handleQuerySubmit}>Find</button>
-      {instanceId > 0 && <button onClick={handleRemoveQuery}>x</button>}
+      {instanceId > 0 && <button onClick={handleQueryRemove}>x</button>}
       {/* <span>{matchCount}</span> */}
     </form>
   )
