@@ -84,7 +84,9 @@ function QueryForm({ instanceId }: { instanceId: number }) {
       />
       <input type="color" value={color} onChange={handleColorChange} />
       <button onClick={handleQuerySubmit}>Find</button>
-      {instanceId > 0 && <button onClick={handleQueryRemove}>x</button>}
+      <button onClick={handleQueryRemove} disabled={instanceId === 0}>
+        x
+      </button>
       {/* <span>{matchCount}</span> */}
     </form>
   )

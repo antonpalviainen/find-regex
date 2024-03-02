@@ -1,4 +1,4 @@
-import { Highlighter } from './Highlighter'
+import { Highlighter } from './highlighter'
 import { sendMessageToRuntime, type Message } from './utils'
 
 const instances: Highlighter[] = [new Highlighter()]
