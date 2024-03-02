@@ -91,7 +91,7 @@ export async function removeStorageValue(key: string) {
 }
 
 // https://javascript.info/task/debounce
-export function debounce(func: Function, ms: number) {
+function debounce(func: Function, ms: number) {
   let timeout: number | undefined
   return function () {
     clearTimeout(timeout)

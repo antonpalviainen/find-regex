@@ -74,17 +74,34 @@ function QueryForm({ instanceId }: { instanceId: number }) {
 
   return (
     <form>
-      <input type="checkbox" checked={isChecked} onChange={handleQueryToggle} />
+      <input
+        type="checkbox"
+        checked={isChecked}
+        onChange={handleQueryToggle}
+        title="Enable/disable highlighting"
+      />
       <input
         className="query-input"
         type="text"
         value={query}
         onChange={handleQueryChange}
         autoComplete="off"
+        title="Regular expression to highlight"
       />
-      <input type="color" value={color} onChange={handleColorChange} />
-      <button onClick={handleQuerySubmit}>Find</button>
-      <button onClick={handleQueryRemove} disabled={instanceId === 0}>
+      <input
+        type="color"
+        value={color}
+        onChange={handleColorChange}
+        title="Change highlight color"
+      />
+      <button onClick={handleQuerySubmit} title="Highlight">
+        Find
+      </button>
+      <button
+        onClick={handleQueryRemove}
+        disabled={instanceId === 0}
+        title="Remove query"
+      >
         x
       </button>
       {/* <span>{matchCount}</span> */}
@@ -126,7 +143,9 @@ function App() {
       {[...Array(queryCount)].map((_, i) => (
         <QueryForm instanceId={i} key={i} />
       ))}
-      <button onClick={handleNewQuery}>+</button>
+      <button onClick={handleNewQuery} title="Add new query">
+        +
+      </button>
     </div>
   )
 }
