@@ -7,7 +7,7 @@ interface BaseMessage {
 
 interface BoolOptionMessage extends BaseMessage {
   type: 'option'
-  option: string
+  option: 'ignoreCase' | 'isUsingRegex'
   value: boolean
 }
 

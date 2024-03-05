@@ -20,7 +20,7 @@ export default function QueryForm({
   const [error, setError] = useState('')
   const [color, setColor] = useState('#ffff00')
   const [checked, setChecked] = useState(true)
-  const [expanded, setExpanded] = useState(true)
+  const [expanded, setExpanded] = useState(false)
   const [ignoreCase, setIgnoreCase] = useState(true)
   const [isUsingRegex, setIsUsingRegex] = useState(true)
   const [matchCount, setMatchCount] = useState(0)
@@ -101,12 +101,24 @@ export default function QueryForm({
     setExpanded(!expanded)
   }
 
-  function handleIsUsingRegexToggle() {
+  async function handleIsUsingRegexToggle() {
     setIsUsingRegex(!isUsingRegex)
+    await sendMessageToTab({
+      type: 'option',
+      instanceId,
+      option: 'isUsingRegex',
+      value: !isUsingRegex,
+    })
   }
 
-  function handleIgnoreCaseToggle() {
+  async function handleIgnoreCaseToggle() {
     setIgnoreCase(!ignoreCase)
+    await sendMessageToTab({
+      type: 'option',
+      instanceId,
+      option: 'ignoreCase',
+      value: !ignoreCase,
+    })
   }
 
   async function onQueryRemove(e: React.MouseEvent<HTMLButtonElement>) {

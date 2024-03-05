@@ -28,13 +28,25 @@ chrome.runtime.onMessage.addListener(async (message: Message) => {
       instance.upsertStyle(message.backgroundColor, message.color)
       break
     case 'query':
-      instance.start(message.query)
+      instance.setQuery(message.query)
+      break
+    case 'option':
+      switch (message.option) {
+        case 'ignoreCase':
+          instance.setIgnoreCase(message.value)
+          break
+        case 'isUsingRegex':
+          instance.setIsUsingRegex(message.value)
+          break
+        default:
+          console.error('content.tsx: unknown option:', message.option)
+          break
+      }
       break
     case 'remove':
       instance.destroy()
       instances.splice(instances.indexOf(instance), 1)
       break
-
     case 'error':
       console.error('content.tsx: error:', message.message)
       break

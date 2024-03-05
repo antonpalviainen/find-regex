@@ -14,8 +14,11 @@ export default class Highlighter {
   initColor: string
   initBackgroundColor: string
   private css: string
-  private styleClass: string
+  private query: string = ''
   private observer: MutationObserver | null = null
+  private ignoreCase: boolean = true
+  private styleClass: string
+  private isUsingRegex: boolean = true
   private styleElement: HTMLStyleElement | null = null
 
   static count = 0
@@ -56,14 +59,56 @@ export default class Highlighter {
     }
   }
 
-  async start(query: string) {
+  setQuery(query: string) {
+    this.query = query
+    this.run()
+  }
+
+  setIgnoreCase(value: boolean) {
+    this.ignoreCase = value
+    this.run()
+  }
+
+  setIsUsingRegex(value: boolean) {
+    this.isUsingRegex = value
+    this.run()
+  }
+
+  destroy() {
+    if (this.observer) {
+      this.observer.disconnect()
+    }
+    this.removeHighlight()
+  }
+
+  private createRegexp(query: string) {
+    const flags = this.ignoreCase ? 'gi' : 'g'
+
+    if (!this.isUsingRegex) {
+      query = query.replace(/[\\^$.*+?()[\]{}|]/g, '\\$&')
+    }
+
+    try {
+      return new RegExp(query, flags)
+    } catch (error) {
+      sendMessageToRuntime({
+        type: 'error',
+        instanceId: this.id,
+        message: 'Invalid pattern',
+      })
+      console.error('invalid pattern:', query, error)
+      return null
+    }
+  }
+
+  private async run() {
     if (this.observer) {
       this.observer.disconnect()
     }
 
     this.removeHighlight()
 
-    const regexp = this.createRegexp(query)
+    const regexp = this.createRegexp(this.query)
     if (!regexp) return
 
     let count = this.walkNodes(document.body, regexp)
@@ -87,27 +132,6 @@ export default class Highlighter {
     })
 
     this.observer.observe(document.body, { childList: true, subtree: true })
-  }
-
-  destroy() {
-    if (this.observer) {
-      this.observer.disconnect()
-    }
-    this.removeHighlight()
-  }
-
-  private createRegexp(query: string) {
-    try {
-      return new RegExp(query, 'gi')
-    } catch (error) {
-      sendMessageToRuntime({
-        type: 'error',
-        instanceId: this.id,
-        message: 'Invalid pattern',
-      })
-      console.error('invalid pattern:', query, error)
-      return null
-    }
   }
 
   private walkNodes(root: Node, query: RegExp) {
