@@ -1,149 +1,48 @@
-import { useEffect, useState } from 'react'
+import { useRef, useState } from 'react'
 import './App.css'
-import {
-  getStorageValue,
-  setStorageValue,
-  sendMessageToTab,
-  removeStorageValue,
-} from './utils'
-import { useDebounce } from './utils'
-
-function QueryForm({ instanceId }: { instanceId: number }) {
-  const [query, setQuery] = useState('')
-  const [color, setColor] = useState('#ffff00')
-  const [isChecked, setIsChecked] = useState(true)
-  // const [matchCount, setMatchCount] = useState(0)
-
-  useEffect(() => {
-    getStorageValue(`query-${instanceId}`).then((value) => {
-      setQuery(value ?? '')
-    })
-
-    // getStorageValue('color').then((value) => {
-    //   setColor(value ?? '#ffff00')
-    // })
-  }, [])
-
-  const debouncedSetStorageValue = useDebounce(() => {
-    setStorageValue(`query-${instanceId}`, query)
-  })
-
-  async function handleQueryChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const query = e.target.value
-    setQuery(query)
-    debouncedSetStorageValue()
-  }
-
-  async function handleQuerySubmit(e: React.MouseEvent<HTMLButtonElement>) {
-    e.preventDefault()
-
-    console.log('App.tsx: handleFind', query)
-    sendMessageToTab({
-      type: 'query',
-      instanceId,
-      query,
-    })
-  }
-
-  async function handleQueryToggle(e: React.ChangeEvent<HTMLInputElement>) {
-    console.log('App.tsx: handleQueryToggle', e.target.checked)
-    await sendMessageToTab({
-      type: 'color',
-      instanceId,
-      backgroundColor: isChecked ? 'transparent' : color,
-      color: isChecked ? 'unset' : 'black',
-    })
-    setIsChecked(!isChecked)
-  }
-
-  async function handleColorChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setColor(e.target.value)
-    await sendMessageToTab({
-      type: 'color',
-      instanceId,
-      backgroundColor: color,
-    })
-    // debounce(() => setStorageValue('color', color), 1000)()
-  }
-
-  async function handleQueryRemove(e: React.MouseEvent<HTMLButtonElement>) {
-    e.preventDefault()
-    await removeStorageValue(`query-${instanceId}`)
-    // await sendMessageToTab({ type: 'remove', instanceId })
-  }
-
-  return (
-    <form>
-      <input
-        type="checkbox"
-        checked={isChecked}
-        onChange={handleQueryToggle}
-        title="Enable/disable highlighting"
-      />
-      <input
-        className="query-input"
-        type="text"
-        value={query}
-        onChange={handleQueryChange}
-        autoComplete="off"
-        title="Regular expression to highlight"
-      />
-      <input
-        type="color"
-        value={color}
-        onChange={handleColorChange}
-        title="Change highlight color"
-      />
-      <button onClick={handleQuerySubmit} title="Highlight">
-        Find
-      </button>
-      <button
-        onClick={handleQueryRemove}
-        disabled={instanceId === 0}
-        title="Remove query"
-      >
-        x
-      </button>
-      {/* <span>{matchCount}</span> */}
-    </form>
-  )
-}
+import QueryForm from './QueryForm'
+import { type Message } from './utils'
 
 function App() {
-  const [queryCount, setQueryCount] = useState(1)
+  const [queries, setQueries] = useState([1])
+  const lastQueryId = useRef(1)
 
-  chrome.runtime.onMessage.addListener(async (message) => {
+  chrome.runtime.onMessage.addListener(async (message: Message) => {
     console.log('App.tsx: onMessage:', message)
     switch (message.type) {
-      // case 'count':
-      //   setMatchCount(message.content)
-      //   break
       case 'init':
-        const id = message.content
-        const queries = JSON.parse((await getStorageValue('queries')) ?? '[]')
-        if (!queries.includes(id)) {
-          queries.push(id)
-          console.log('App.tsx: queries', queries)
+        const newId = message.instanceId
+        if (!queries.includes(newId)) {
+          setQueries([...queries, newId])
         }
-        await setStorageValue('queries', JSON.stringify(queries))
         break
       default:
         console.log('App.tsx: unknown message type:', message.type)
+        break
     }
   })
 
-  async function handleNewQuery() {
+  async function handleAddQuery() {
     console.log('App.tsx: handleNewQuery')
-    setQueryCount(queryCount + 1)
-    await sendMessageToTab({ type: 'init', instanceId: queryCount })
+    console.log('lastQueryId', lastQueryId)
+    setQueries([...queries, ++lastQueryId.current])
+    console.log('lastQueryId', lastQueryId)
+  }
+
+  async function handleQueryRemove(instanceId: number) {
+    setQueries(queries.filter((id) => id !== instanceId))
   }
 
   return (
-    <div className="App">
-      {[...Array(queryCount)].map((_, i) => (
-        <QueryForm instanceId={i} key={i} />
+    <div className="app">
+      {queries.map((instanceId) => (
+        <QueryForm
+          instanceId={instanceId}
+          key={instanceId}
+          handleQueryRemove={() => handleQueryRemove(instanceId)}
+        />
       ))}
-      <button onClick={handleNewQuery} title="Add new query">
+      <button onClick={handleAddQuery} title="Add new query">
         +
       </button>
     </div>

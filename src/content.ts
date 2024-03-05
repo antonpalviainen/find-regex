@@ -1,5 +1,5 @@
-import { Highlighter } from './highlighter'
-import { sendMessageToRuntime, type Message } from './utils'
+import Highlighter from './highlighter'
+import { type Message } from './utils'
 
 const instances: Highlighter[] = [new Highlighter()]
 
@@ -7,28 +7,34 @@ chrome.runtime.onMessage.addListener(async (message: Message) => {
   console.log('content.tsx: onMessage:', message)
 
   switch (message.type) {
-    case 'color':
-      instances[message.instanceId].upsertStyle(
-        message.backgroundColor ?? instances[message.instanceId].initColor,
-        message.color ?? 'black'
-      )
-      break
     case 'init':
-      // console.log('content.tsx: init:', message.instanceId, Highlighter.count)
-      if (message.instanceId === Highlighter.count) {
+      if (message.instanceId === Highlighter.count + 1) {
         const highlighter = new Highlighter()
-        console.log('content.tsx: new highlight instantiated', highlighter.id)
-        await sendMessageToRuntime({
-          type: 'init',
-          instanceId: highlighter.id,
-        })
         instances.push(highlighter)
       }
-      // console.log('content.tsx: instances', instances)
+      return
+  }
+
+  const instance = instances.find(
+    (instance) => instance.id === message.instanceId
+  )
+  if (!instance) {
+    console.error('content.tsx: instance not found:', message.instanceId)
+    return
+  }
+
+  switch (message.type) {
+    case 'color':
+      instance.upsertStyle(message.backgroundColor, message.color)
       break
     case 'query':
-      instances[message.instanceId].start(message.query)
+      instance.start(message.query)
       break
+    case 'remove':
+      instance.destroy()
+      instances.splice(instances.indexOf(instance), 1)
+      break
+
     case 'error':
       console.error('content.tsx: error:', message.message)
       break

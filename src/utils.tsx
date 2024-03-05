@@ -5,6 +5,12 @@ interface BaseMessage {
   instanceId: number
 }
 
+interface BoolOptionMessage extends BaseMessage {
+  type: 'option'
+  option: string
+  value: boolean
+}
+
 interface ColorMessage extends BaseMessage {
   type: 'color'
   backgroundColor?: string
@@ -30,12 +36,18 @@ interface QueryMessage extends BaseMessage {
   query: string
 }
 
+interface RemoveMessage extends BaseMessage {
+  type: 'remove'
+}
+
 export type Message =
+  | BoolOptionMessage
   | ColorMessage
   | CountMessage
   | ErrorMessage
   | InitMessage
   | QueryMessage
+  | RemoveMessage
 
 async function getTabId() {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true })
@@ -44,7 +56,7 @@ async function getTabId() {
 
 export async function getStorageValue(key: string) {
   try {
-    const result = await chrome.storage.sync.get(key)
+    const result = await chrome.storage.local.get(key)
     console.log('getStorageValue', key, result[key])
     return result[key] ?? null
   } catch (error) {
@@ -56,7 +68,7 @@ export async function getStorageValue(key: string) {
 export async function setStorageValue(key: string, value: any) {
   console.log('setStorageValue', key, value)
   try {
-    await chrome.storage.sync.set({ [key]: value })
+    await chrome.storage.local.set({ [key]: value })
   } catch (error) {
     console.error('setStorageValue error:', error)
   }
@@ -84,7 +96,7 @@ export async function sendMessageToRuntime(message: Message) {
 export async function removeStorageValue(key: string) {
   console.log('removeStorageValue', key)
   try {
-    await chrome.storage.sync.remove(key)
+    await chrome.storage.local.remove(key)
   } catch (error) {
     console.error('removeStorageValue error:', error)
   }

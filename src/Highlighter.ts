@@ -1,13 +1,18 @@
 import { sendMessageToRuntime } from './utils'
 
+function isValidColor(color: string) {
+  return CSS.supports('color', color)
+}
+
 export interface MatchType {
   index: number
   value: string
 }
 
-export class Highlighter {
+export default class Highlighter {
   id: number
   initColor: string
+  initBackgroundColor: string
   private css: string
   private styleClass: string
   private observer: MutationObserver | null = null
@@ -19,11 +24,25 @@ export class Highlighter {
     this.id = ++Highlighter.count
     this.styleClass = `find-regex-highlight-${this.id}`
     this.css = `.${this.styleClass} { background-color: BACKGROUND_COLOR; color: FOREGROUND_COLOR; }`
-    this.initColor = '#ffff00'
-    this.upsertStyle(this.initColor, 'black')
+    this.initColor = '#000000'
+    this.initBackgroundColor = '#ffff00'
+    this.upsertStyle(this.initBackgroundColor, this.initColor)
+
+    console.log('Highlighter:', this.id)
+    sendMessageToRuntime({
+      type: 'init',
+      instanceId: this.id,
+    }).then()
   }
 
-  upsertStyle(backgroundColor: string, color: string) {
+  upsertStyle(
+    backgroundColor: string = this.initBackgroundColor,
+    color: string = this.initColor
+  ) {
+    if (!isValidColor(backgroundColor) || !isValidColor(color)) {
+      console.error('invalid color or backgroundColor:', backgroundColor, color)
+      return
+    }
     const css = this.css
       .replace('BACKGROUND_COLOR', backgroundColor)
       .replace('FOREGROUND_COLOR', color)
@@ -70,10 +89,22 @@ export class Highlighter {
     this.observer.observe(document.body, { childList: true, subtree: true })
   }
 
+  destroy() {
+    if (this.observer) {
+      this.observer.disconnect()
+    }
+    this.removeHighlight()
+  }
+
   private createRegexp(query: string) {
     try {
       return new RegExp(query, 'gi')
     } catch (error) {
+      sendMessageToRuntime({
+        type: 'error',
+        instanceId: this.id,
+        message: 'Invalid pattern',
+      })
       console.error('invalid pattern:', query, error)
       return null
     }

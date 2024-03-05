@@ -1,45 +1,7 @@
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg-dark: #2b2b2b;
-    --bg-medium: #3c3c3c;
-    --bg-light: #4d4d4d;
-
-    --fg-dark: #757575;
-    --fg-light: #ffffff;
-
-    --focus: #0051ff;
-  }
-
-  body {
-    background-color: var(--bg-dark);
-  }
-
-  button,
-  input {
-    background-color: var(--bg-medium);
-    color: var(--fg-light);
-    border: 1px solid var(--fg-dark);
-  }
-
-  button:disabled {
-    color: var(--fg-dark);
-    border: 1px solid var(--bg-light);
-  }
-
-  *:focus {
-    outline: 2px solid var(--focus);
-  }
-
-  button:hover:not(:disabled),
-  input:hover:not(:disabled) {
-    background-color: #505050;
-  }
-}
-
 button,
 input {
   padding: 3px 4px;
-  border-radius: 2px;
+  border-radius: 3px;
 }
 
 button {
@@ -47,20 +9,21 @@ button {
   padding: 0 8px;
 }
 
-form {
-  width: 100%;
-  display: flex;
-  justify-content: left;
-  align-items: center;
-  gap: 8px;
-}
-
 input[type='color'] {
   height: 28px;
+  width: 35px;
 }
 
-.App {
-  width: 400px;
+input[type='text'] {
+  flex-grow: 1;
+}
+
+label, span {
+  font-size: 14px;
+}
+
+.app {
+  width: 500px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -69,7 +32,7 @@ input[type='color'] {
 }
 
 .query-input {
-  width: 100%;
+  /* width: 100%; */
   height: 20px;
   font-size: 16px;
 }
