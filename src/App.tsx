@@ -7,7 +7,7 @@ function App() {
   const [queries, setQueries] = useState([1])
   const lastQueryId = useRef(1)
 
-  chrome.runtime.onMessage.addListener(async (message: Message) => {
+  chrome.runtime.onMessage.addListener((message: Message) => {
     console.log('App.tsx: onMessage:', message)
     switch (message.type) {
       case 'init':
@@ -22,14 +22,14 @@ function App() {
     }
   })
 
-  async function handleAddQuery() {
+  function handleAddQuery() {
     console.log('App.tsx: handleNewQuery')
     console.log('lastQueryId', lastQueryId)
     setQueries([...queries, ++lastQueryId.current])
     console.log('lastQueryId', lastQueryId)
   }
 
-  async function handleQueryRemove(instanceId: number) {
+  function handleQueryRemove(instanceId: number) {
     setQueries(queries.filter((id) => id !== instanceId))
   }
 

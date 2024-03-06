@@ -18,7 +18,8 @@ export default function QueryForm({
 }) {
   const [query, setQuery] = useState('')
   const [error, setError] = useState('')
-  const [color, setColor] = useState('#ffff00')
+  const [foregroundColor, setFGColor] = useState('#000000')
+  const [backgroundColor, setBGColor] = useState('#ffff00')
   const [checked, setChecked] = useState(true)
   const [expanded, setExpanded] = useState(false)
   const [ignoreCase, setIgnoreCase] = useState(true)
@@ -26,8 +27,6 @@ export default function QueryForm({
   const [matchCount, setMatchCount] = useState(0)
 
   useEffect(() => {
-    console.log('QueryForm.tsx: useEffect')
-
     sendMessageToTab({ type: 'init', instanceId }).then()
 
     getStorageValue(`query-${instanceId}`).then((value) => {
@@ -35,11 +34,11 @@ export default function QueryForm({
     })
 
     getStorageValue(`color-${instanceId}`).then((value) => {
-      setColor(value ?? '#ffff00')
+      setBGColor(value ?? '#ffff00')
     })
   }, [])
 
-  chrome.runtime.onMessage.addListener(async (message: Message) => {
+  chrome.runtime.onMessage.addListener((message: Message) => {
     console.log('QueryForm.tsx: onMessage:', message)
     if (message.instanceId !== instanceId) return
     setError('')
@@ -58,8 +57,18 @@ export default function QueryForm({
   })
 
   const debouncedSetStorageColor = useDebounce(() => {
-    setStorageValue(`color-${instanceId}`, color)
+    setStorageValue(`color-${instanceId}`, backgroundColor)
   })
+
+  async function handleQueryToggle() {
+    await sendMessageToTab({
+      type: 'color',
+      instanceId,
+      backgroundColor: checked ? 'transparent' : backgroundColor,
+      color: checked ? 'unset' : 'black',
+    })
+    setChecked(!checked)
+  }
 
   function handleQueryChange(e: React.ChangeEvent<HTMLInputElement>) {
     const query = e.target.value
@@ -76,29 +85,28 @@ export default function QueryForm({
     })
   }
 
-  async function handleQueryToggle() {
-    await sendMessageToTab({
-      type: 'color',
-      instanceId,
-      backgroundColor: checked ? 'transparent' : color,
-      color: checked ? 'unset' : 'black',
-    })
-    setChecked(!checked)
+  function handleExpandOptions(e: React.MouseEvent<HTMLButtonElement>) {
+    e.preventDefault()
+    setExpanded(!expanded)
   }
 
-  async function handleColorChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setColor(e.target.value)
+  async function handleBGColorChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setBGColor(e.target.value)
     await sendMessageToTab({
       type: 'color',
       instanceId,
-      backgroundColor: color,
+      backgroundColor: backgroundColor,
     })
     debouncedSetStorageColor()
   }
 
-  function handleExpandOptions(e: React.MouseEvent<HTMLButtonElement>) {
-    e.preventDefault()
-    setExpanded(!expanded)
+  async function handleFGColorChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setFGColor(e.target.value)
+    await sendMessageToTab({
+      type: 'color',
+      instanceId,
+      color: foregroundColor,
+    })
   }
 
   async function handleIsUsingRegexToggle() {
@@ -148,8 +156,8 @@ export default function QueryForm({
         />
         <input
           type="color"
-          value={color}
-          onChange={handleColorChange}
+          value={backgroundColor}
+          onChange={handleBGColorChange}
           title="Change highlight color"
         />
         <button onClick={handleQuerySubmit} title="Highlight">
@@ -178,7 +186,8 @@ export default function QueryForm({
           </label>
           <input
             type="color"
-            value="black"
+            value={foregroundColor}
+            onChange={handleFGColorChange}
             title="Change highlight text color"
           />
           <button
