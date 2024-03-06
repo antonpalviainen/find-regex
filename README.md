@@ -24,3 +24,20 @@
 10. Remove query, will remove its highlighting
 11. Add a new query
 
+## Tools Used
+- [CRXJS](https://crxjs.dev/vite-plugin)
+- [React](https://react.dev)
+- [TypeScript](https://www.typescriptlang.org)
+- [Vite](https://vitejs.dev)
+
+## Developing
+
+#### Run developement server
+```
+git clone https://github.com/antonpalviainen/find-regex.git
+cd find-regex
+npm run dev
+```
+
+#### Build
+`npm run build`
